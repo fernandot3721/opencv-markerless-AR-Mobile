@@ -6,4 +6,5 @@ gradlew
 gradlew.bat
 import-summary.txt
 *.iml
-
+openCVLibrary2410/.externalNativeBuild/
+opencvmarkerlessARMobile/.externalNativeBuild/
