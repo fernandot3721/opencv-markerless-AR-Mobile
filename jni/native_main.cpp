@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include "native_interface.h"
 
-#include <gles/GL.h>
-#include<gles/glext.h>
+#include <GLES/gl.h>
+#include<GLES/glext.h>
 
 
 #include <opencv2/core/core.hpp>
