@@ -2,7 +2,7 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-include /opt/OpenCV-2.4.10-android-sdk/sdk/native/jni/OpenCV.mk
+include ../../sdk/native/jni/OpenCV.mk
 LOCAL_CFLAGS := -DOPEL_ES_1 -DANDROID_NDK
 LOCAL_ARM_MODE := arm
 

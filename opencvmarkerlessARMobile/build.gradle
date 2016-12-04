@@ -1,0 +1,27 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 17
+    buildToolsVersion "25.0.0"
+
+    defaultConfig {
+        applicationId "meiroo.cvgl"
+        minSdkVersion 8
+        targetSdkVersion 8
+
+        ndk {
+            moduleName "cvgl"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    compile project(':openCVLibrary2410')
+}
