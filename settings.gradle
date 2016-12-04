@@ -1,2 +1,2 @@
 include ':openCVLibrary2410'
-include ':opencvmarkerlessARMobile'
+include ':openCVTutorial2MixedProcessing'

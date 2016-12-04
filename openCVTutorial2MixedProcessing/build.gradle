@@ -1,14 +1,16 @@
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 14
     buildToolsVersion "25.0.0"
 
     defaultConfig {
+        applicationId "org.opencv.samples.tutorial2"
         minSdkVersion 8
         targetSdkVersion 8
 
         ndk {
+            moduleName "mixed_sample"
             abiFilters "armeabi-v7a"
         }
     }
@@ -21,7 +23,11 @@ android {
     }
     externalNativeBuild {
         ndkBuild {
-            path '../openCVTutorial2MixedProcessing/src/main/jni/Android.mk'
+            path 'src/main/jni/Android.mk'
         }
     }
+}
+
+dependencies {
+    compile project(':openCVLibrary2410')
 }
