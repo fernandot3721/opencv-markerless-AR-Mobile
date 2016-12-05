@@ -8,3 +8,4 @@ import-summary.txt
 *.iml
 openCVLibrary2410/.externalNativeBuild/
 opencvmarkerlessARMobile/.externalNativeBuild/
+openCVTutorial2MixedProcessing/.externalNativeBuild/

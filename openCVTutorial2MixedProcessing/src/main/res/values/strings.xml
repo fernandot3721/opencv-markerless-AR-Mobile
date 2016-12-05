@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OCV T2 Mixed Processing</string>
+    <string name="title_activity_impage">ImpageActivity</string>
+    <string name="title_activity_img">ImgActivity</string>
 </resources>

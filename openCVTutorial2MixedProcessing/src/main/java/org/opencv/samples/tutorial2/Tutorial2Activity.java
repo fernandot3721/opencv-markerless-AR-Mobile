@@ -11,6 +11,7 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -131,9 +132,12 @@ public class Tutorial2Activity extends Activity implements CvCameraViewListener2
             break;
         case VIEW_MODE_CANNY:
             // input frame has gray scale format
-            mRgba = inputFrame.rgba();
-            Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
-            Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+//            mRgba = inputFrame.rgba();
+//            Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
+//            Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+            Intent intent = new Intent(this, ImpageActivity.class);
+            startActivity(intent);
+            finish();
             break;
         case VIEW_MODE_FEATURES:
             // input frame has RGBA format
