@@ -50,9 +50,6 @@
         <activity
             android:name=".ImpageActivity"
             android:label="@string/title_activity_impage" />
-        <activity
-            android:name=".ImgActivity"
-            android:label="@string/title_activity_img"></activity>
     </application>
 
 </manifest>

@@ -12,12 +12,18 @@ import android.widget.ImageView;
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.DMatch;
+import org.opencv.features2d.DescriptorExtractor;
+import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.features2d.KeyPoint;
 import org.opencv.highgui.Highgui;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ImpageActivity extends Activity {
@@ -28,11 +34,11 @@ public class ImpageActivity extends Activity {
     private Button mBtnBack;
     private Button mBtnMatch;
     private ImageView mTrainimgView;
-    private ImageView mTestimgView;
+    private ImageView mQueryimgView;
     private String mTrainImgPath;
-    private String mTestImgPath;
+    private String mQueryImgPath;
     private Mat mTrainImg;
-    private Mat mTestImg;
+    private Mat mQueryImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,24 +67,26 @@ public class ImpageActivity extends Activity {
         });
 
         mTrainimgView = (ImageView) findViewById(R.id.imageTrain);
-        mTestimgView = (ImageView) findViewById(R.id.imageTest);
+        mQueryimgView = (ImageView) findViewById(R.id.imageQuery);
 
-        mTestImgPath = "/sdcard/uc-browser-android2.jpg";
+        mQueryImgPath = "/sdcard/uc-browser-android2.jpg";
         mTrainImgPath = "/sdcard/uc.png";
-        mTrainImg = Highgui.imread(mTrainImgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-        mTestImg = Highgui.imread(mTestImgPath);
+//        mTrainImg = Highgui.imread(mTrainImgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+//        mQueryImg = Highgui.imread(mQueryImgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+        mTrainImg = Highgui.imread(mTrainImgPath);
+        mQueryImg = Highgui.imread(mQueryImgPath);
 
         if (LogEnable) {
             Log.d(LogTAG,  "Train Image width: " + mTrainImg.width() + " height: " + mTrainImg.height());
-            Log.d(LogTAG,  "Test Image width: " + mTestImg.width() + " height: " + mTestImg.height());
+            Log.d(LogTAG,  "Test Image width: " + mQueryImg.width() + " height: " + mQueryImg.height());
         }
 
         showImg(mTrainImg, mTrainimgView);
-        showImg(mTestImg, mTestimgView);
+        showImg(mQueryImg, mQueryimgView);
     }
 
     private void showImg(Mat img, ImageView content) {
-        Bitmap tmp = Bitmap.createBitmap(img.width(), img.height(), Bitmap.Config.ARGB_8888);
+        Bitmap tmp = Bitmap.createBitmap(img.width(), img.height(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(img, tmp);
         content.setImageBitmap(tmp);
     }
@@ -88,16 +96,60 @@ public class ImpageActivity extends Activity {
         int i = 0;
 
         if (LogEnable) {
-            Log.d(LogTAG, "match size: " + keyList.size());
+            Log.d(LogTAG, "key point size: " + keyList.size());
         }
 
-        for (KeyPoint point : keyList) {
-            if (i++ > 500) {
-                break;
+        if (null == img) {
+            return;
+        }
+
+        Features2d.drawKeypoints(img, keyPoints, img);
+
+    }
+
+    private void detectAndCompute(Mat img, FeatureDetector detector, DescriptorExtractor extractor,
+                                  MatOfKeyPoint keyPoints, Mat descriptors) {
+        detector.detect(img, keyPoints);
+        extractor.compute(img, keyPoints, descriptors);
+//        drawKeyPoints(null, keyPoints);
+        drawKeyPoints(img, keyPoints);
+    }
+
+    private void drawMatchResult(MatOfDMatch matches,
+                                 MatOfKeyPoint keyPointsTrain, MatOfKeyPoint keyPointsQuery) {
+        List<DMatch> matchList = matches.toList();
+        if (LogEnable) {
+            Log.d(LogTAG, "MATCH size: " + matchList.size());
+        }
+        if (matchList.size() <= 0) {
+            return;
+        }
+
+        double maxDistance = 0;
+        double minDistance = 1000;
+
+        int rowCount = matchList.size();
+        for (int i = 0; i < rowCount; i++) {
+            double dist = matchList.get(i).distance;
+            if (dist < minDistance) minDistance = dist;
+            if (dist > maxDistance) maxDistance = dist;
+        }
+
+        List<DMatch> goodMatchesList = new ArrayList<DMatch>();
+        double upperBound = 3 * minDistance;
+        for (int i = 0; i < rowCount; i++) {
+            if (matchList.get(i).distance < upperBound) {
+                goodMatchesList.add(matchList.get(i));
             }
-            Core.circle(img, point.pt, 10, new Scalar(255,0,0,255));
         }
 
+        MatOfDMatch goodMatches = new MatOfDMatch();
+        goodMatches.fromList(goodMatchesList);
+
+        Mat ret = new Mat();
+        ImageView retView = (ImageView) findViewById(R.id.imageResult);
+        Features2d.drawMatches(mTrainImg, keyPointsTrain, mQueryImg, keyPointsQuery, goodMatches, ret);
+        showImg(ret, retView);
     }
 
     private void doMatch() {
@@ -106,23 +158,37 @@ public class ImpageActivity extends Activity {
         }
 
         FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
-        MatOfKeyPoint keyPoints = new MatOfKeyPoint();
+        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+        MatOfKeyPoint keyPointsTrain = new MatOfKeyPoint();
+        MatOfKeyPoint keyPointsQuery = new MatOfKeyPoint();
+        Mat descriptorsTrain = new Mat();
+        Mat descriptorsQuery = new Mat();
+        MatOfDMatch matches = new MatOfDMatch();
 
         // for train img
         if (LogEnable) {
-            Log.d(LogTAG, "find key point for Train Image");
+            Log.d(LogTAG, "--find key point for Train Image");
         }
-        detector.detect(mTrainImg, keyPoints);
-        drawKeyPoints(mTrainImg, keyPoints);
+        detectAndCompute(mTrainImg, detector, extractor, keyPointsTrain, descriptorsTrain);
         showImg(mTrainImg, mTrainimgView);
+
+
 
         // for test img
         if (LogEnable) {
-            Log.d(LogTAG, "find key point for Test Image");
+            Log.d(LogTAG, "--find key point for Query Image");
         }
-        detector.detect(mTestImg, keyPoints);
-        drawKeyPoints(mTestImg, keyPoints);
-        showImg(mTestImg, mTestimgView);
+        detectAndCompute(mQueryImg, detector, extractor, keyPointsQuery, descriptorsQuery);
+        showImg(mQueryImg, mQueryimgView);
+
+        // start to match
+        if (LogEnable) {
+            Log.d(LogTAG, "--match two Image");
+        }
+
+        matcher.match(descriptorsQuery, descriptorsTrain, matches);
+        drawMatchResult(matches, keyPointsTrain, keyPointsQuery);
     }
 
 }

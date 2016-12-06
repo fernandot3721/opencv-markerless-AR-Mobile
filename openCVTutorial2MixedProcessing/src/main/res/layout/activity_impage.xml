@@ -38,7 +38,12 @@
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/imageTest" />
+            android:id="@+id/imageQuery" />
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageResult" />
 
     </LinearLayout>
 </RelativeLayout>
