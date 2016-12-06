@@ -11,7 +11,9 @@ import android.widget.ImageView;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Scalar;
@@ -109,10 +111,14 @@ public class ImpageActivity extends Activity {
 
     private void detectAndCompute(Mat img, FeatureDetector detector, DescriptorExtractor extractor,
                                   MatOfKeyPoint keyPoints, Mat descriptors) {
+        PerformanceAnalyzer.log();
         detector.detect(img, keyPoints);
+        PerformanceAnalyzer.logAndCount("Find key points COSTs");
         extractor.compute(img, keyPoints, descriptors);
+        PerformanceAnalyzer.logAndCount("Find descriptors COSTs");
 //        drawKeyPoints(null, keyPoints);
         drawKeyPoints(img, keyPoints);
+        PerformanceAnalyzer.count("Draw key pointns COSTs");
     }
 
     private void drawMatchResult(MatOfDMatch matches,
@@ -159,19 +165,44 @@ public class ImpageActivity extends Activity {
         showImg(ret, retView2);
     }
 
+    private void drawMatchResult2(List<MatOfDMatch> matchesList,
+                                 MatOfKeyPoint keyPointsTrain, MatOfKeyPoint keyPointsQuery) {
+
+        Log.e(LogTAG, "match list size : " + matchesList.size());
+
+        DMatch[] test;
+        List<MatOfDMatch> good = new ArrayList<MatOfDMatch>();
+        List<MatOfDMatch> good2 = new ArrayList<MatOfDMatch>();
+        for (MatOfDMatch match : matchesList) {
+            test = match.toArray();
+            if (test[0].distance < 0.75*test[1].distance) {
+                good.add(match);
+            }
+        }
+        Log.e(LogTAG, "good match size : " + good.size());
+
+        Mat ret = new Mat();
+        ImageView retView = (ImageView) findViewById(R.id.imageResult);
+        PerformanceAnalyzer.log();
+        Features2d.drawMatches2(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, good, ret);
+        PerformanceAnalyzer.count("drawMatches2 COSTs");
+        showImg(ret, retView);
+    }
+
     private void doMatch() {
         if (LogEnable) {
             Log.d(LogTAG, "======run doMatch");
         }
 
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
+        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.FLANNBASED);
         MatOfKeyPoint keyPointsTrain = new MatOfKeyPoint();
         MatOfKeyPoint keyPointsQuery = new MatOfKeyPoint();
         Mat descriptorsTrain = new Mat();
         Mat descriptorsQuery = new Mat();
         MatOfDMatch matches = new MatOfDMatch();
+        List<MatOfDMatch> matchesList = new ArrayList<MatOfDMatch>();
 
         // for train img
         if (LogEnable) {
@@ -179,8 +210,6 @@ public class ImpageActivity extends Activity {
         }
         detectAndCompute(mTrainImg, detector, extractor, keyPointsTrain, descriptorsTrain);
         showImg(mTrainImg, mTrainimgView);
-
-
 
         // for test img
         if (LogEnable) {
@@ -194,8 +223,14 @@ public class ImpageActivity extends Activity {
             Log.d(LogTAG, "--match two Image");
         }
 
-        matcher.match(descriptorsQuery, descriptorsTrain, matches);
-        drawMatchResult(matches, keyPointsTrain, keyPointsQuery);
+//        matcher.match(descriptorsQuery, descriptorsTrain, matches); // BRUTEFORCE matcher
+//        drawMatchResult(matches, keyPointsTrain, keyPointsQuery);
+
+        PerformanceAnalyzer.log();
+        matcher.knnMatch(descriptorsQuery, descriptorsTrain, matchesList, 2); // FLANNBASED matcher
+        PerformanceAnalyzer.count("knnMatch COSTs");
+
+        drawMatchResult2(matchesList, keyPointsTrain, keyPointsQuery);
     }
 
 }
