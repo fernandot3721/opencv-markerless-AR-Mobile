@@ -48,6 +48,7 @@ public class Tutorial2Activity extends Activity implements CvCameraViewListener2
 
                     // Load native library after(!) OpenCV initialization
                     System.loadLibrary("mixed_sample");
+                    System.loadLibrary("nonfree");
 
                     mOpenCvCameraView.enableView();
                 } break;

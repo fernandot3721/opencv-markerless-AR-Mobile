@@ -119,7 +119,7 @@ public class ImpageActivity extends Activity {
                                  MatOfKeyPoint keyPointsTrain, MatOfKeyPoint keyPointsQuery) {
         List<DMatch> matchList = matches.toList();
         if (LogEnable) {
-            Log.d(LogTAG, "MATCH size: " + matchList.size());
+            Log.e(LogTAG, "MATCH size: " + matchList.size());
         }
         if (matchList.size() <= 0) {
             return;
@@ -136,7 +136,7 @@ public class ImpageActivity extends Activity {
         }
 
         List<DMatch> goodMatchesList = new ArrayList<DMatch>();
-        double upperBound = 3 * minDistance;
+        double upperBound = 6 * minDistance;
         for (int i = 0; i < rowCount; i++) {
             if (matchList.get(i).distance < upperBound) {
                 goodMatchesList.add(matchList.get(i));
@@ -145,11 +145,18 @@ public class ImpageActivity extends Activity {
 
         MatOfDMatch goodMatches = new MatOfDMatch();
         goodMatches.fromList(goodMatchesList);
+        if (LogEnable) {
+            Log.e(LogTAG, "good MATCH size: " + goodMatchesList.size());
+        }
 
         Mat ret = new Mat();
         ImageView retView = (ImageView) findViewById(R.id.imageResult);
-        Features2d.drawMatches(mTrainImg, keyPointsTrain, mQueryImg, keyPointsQuery, goodMatches, ret);
+        Features2d.drawMatches(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, goodMatches, ret);
         showImg(ret, retView);
+
+        ImageView retView2 = (ImageView) findViewById(R.id.imageResult2);
+        Features2d.drawMatches(mTrainImg, keyPointsTrain, mQueryImg, keyPointsQuery, goodMatches, ret);
+        showImg(ret, retView2);
     }
 
     private void doMatch() {
