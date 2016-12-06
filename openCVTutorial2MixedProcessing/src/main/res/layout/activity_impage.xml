@@ -22,25 +22,23 @@
             android:text="back"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/button" />
+            android:id="@+id/buttonBack" />
 
         <Button
             android:text="match"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/button2" />
+            android:id="@+id/buttonMatch" />
 
         <ImageView
-            android:src="@drawable/uc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/imageView5" />
+            android:id="@+id/imageTrain" />
 
         <ImageView
-            android:src="@drawable/ucbanner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/imageView" />
+            android:id="@+id/imageTest" />
 
     </LinearLayout>
 </RelativeLayout>
