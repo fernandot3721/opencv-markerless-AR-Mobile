@@ -10,19 +10,29 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.opencv.samples.tutorial2.ImpageActivity">
 
-
-    <LinearLayout
-        android:orientation="vertical"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
 
         <Button
             android:text="back"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:id="@+id/buttonBack" />
+
+
+        <Button
+            android:text="test"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonTest" />
 
         <Button
             android:text="match"
@@ -50,5 +60,8 @@
             android:layout_height="wrap_content"
             android:id="@+id/imageResult2" />
 
-    </LinearLayout>
+        </LinearLayout>
+
+    </ScrollView>
+
 </RelativeLayout>
