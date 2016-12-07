@@ -118,7 +118,7 @@ public class ImpageActivity extends Activity {
         PerformanceAnalyzer.logAndCount("Find descriptors COSTs");
 //        drawKeyPoints(null, keyPoints);
         drawKeyPoints(img, keyPoints);
-        PerformanceAnalyzer.count("Draw key pointns COSTs");
+//        PerformanceAnalyzer.count("Draw key pointns COSTs");
     }
 
     private void drawMatchResult(MatOfDMatch matches,
@@ -183,9 +183,9 @@ public class ImpageActivity extends Activity {
 
         Mat ret = new Mat();
         ImageView retView = (ImageView) findViewById(R.id.imageResult);
-        PerformanceAnalyzer.log();
+//        PerformanceAnalyzer.log();
         Features2d.drawMatches2(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, good, ret);
-        PerformanceAnalyzer.count("drawMatches2 COSTs");
+//        PerformanceAnalyzer.count("drawMatches2 COSTs");
         showImg(ret, retView);
     }
 
@@ -194,8 +194,8 @@ public class ImpageActivity extends Activity {
             Log.d(LogTAG, "======run doMatch");
         }
 
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SIFT);
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.SIFT);
+        FeatureDetector detector = FeatureDetector.create(FeatureDetector.ORB);
+        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
         DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.FLANNBASED);
         MatOfKeyPoint keyPointsTrain = new MatOfKeyPoint();
         MatOfKeyPoint keyPointsQuery = new MatOfKeyPoint();
@@ -222,6 +222,11 @@ public class ImpageActivity extends Activity {
         if (LogEnable) {
             Log.d(LogTAG, "--match two Image");
         }
+
+        // NOTE: ORB only takes CV_32 format
+        descriptorsQuery.convertTo(descriptorsQuery, CvType.CV_32F);
+        descriptorsTrain.convertTo(descriptorsTrain, CvType.CV_32F);
+        // test end
 
 //        matcher.match(descriptorsQuery, descriptorsTrain, matches); // BRUTEFORCE matcher
 //        drawMatchResult(matches, keyPointsTrain, keyPointsQuery);
