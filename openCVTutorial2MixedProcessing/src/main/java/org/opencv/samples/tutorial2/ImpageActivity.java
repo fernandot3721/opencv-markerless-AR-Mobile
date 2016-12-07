@@ -10,12 +10,16 @@ import android.widget.Button;
 import android.widget.ImageView;
 
 import org.opencv.android.Utils;
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
@@ -35,6 +39,7 @@ public class ImpageActivity extends Activity {
 
     private Button mBtnBack;
     private Button mBtnMatch;
+    private Button mBtnTest;
     private ImageView mTrainimgView;
     private ImageView mQueryimgView;
     private String mTrainImgPath;
@@ -68,13 +73,21 @@ public class ImpageActivity extends Activity {
             }
         });
 
+        mBtnTest = (Button) findViewById(R.id.buttonTest);
+        mBtnTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                testDrawPolylines();
+            }
+        });
+
         mTrainimgView = (ImageView) findViewById(R.id.imageTrain);
         mQueryimgView = (ImageView) findViewById(R.id.imageQuery);
 
-        mQueryImgPath = "/sdcard/uc-browser-android2.jpg";
-        mTrainImgPath = "/sdcard/uc.png";
-//        mTrainImg = Highgui.imread(mTrainImgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
-//        mQueryImg = Highgui.imread(mQueryImgPath, Highgui.CV_LOAD_IMAGE_GRAYSCALE);
+        mTrainImgPath = "/sdcard/b.jpg";
+        mQueryImgPath = "/sdcard/a.jpg";
+//        mTrainImg = Highgui.imread(mTrainImgPath, Highgui.IMREAD_GRAYSCALE);
+//        mQueryImg = Highgui.imread(mQueryImgPath, Highgui.IMREAD_GRAYSCALE);
         mTrainImg = Highgui.imread(mTrainImgPath);
         mQueryImg = Highgui.imread(mQueryImgPath);
 
@@ -88,7 +101,7 @@ public class ImpageActivity extends Activity {
     }
 
     private void showImg(Mat img, ImageView content) {
-        Bitmap tmp = Bitmap.createBitmap(img.width(), img.height(), Bitmap.Config.RGB_565);
+        Bitmap tmp = Bitmap.createBitmap(img.width(), img.height(), Bitmap.Config.ARGB_8888);
         Utils.matToBitmap(img, tmp);
         content.setImageBitmap(tmp);
     }
@@ -160,9 +173,10 @@ public class ImpageActivity extends Activity {
         Features2d.drawMatches(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, goodMatches, ret);
         showImg(ret, retView);
 
+        Mat ret2 = new Mat();
         ImageView retView2 = (ImageView) findViewById(R.id.imageResult2);
-        Features2d.drawMatches(mTrainImg, keyPointsTrain, mQueryImg, keyPointsQuery, goodMatches, ret);
-        showImg(ret, retView2);
+        Features2d.drawMatches(mTrainImg, keyPointsTrain, mQueryImg, keyPointsQuery, goodMatches, ret2);
+        showImg(ret2, retView2);
     }
 
     private void drawMatchResult2(List<MatOfDMatch> matchesList,
@@ -170,12 +184,9 @@ public class ImpageActivity extends Activity {
 
         Log.e(LogTAG, "match list size : " + matchesList.size());
 
-        DMatch[] test;
         List<MatOfDMatch> good = new ArrayList<MatOfDMatch>();
-        List<MatOfDMatch> good2 = new ArrayList<MatOfDMatch>();
         for (MatOfDMatch match : matchesList) {
-            test = match.toArray();
-            if (test[0].distance < 0.75*test[1].distance) {
+            if (match.get(0, 0)[3] < 0.75*match.get(1, 0)[3]) { // distance
                 good.add(match);
             }
         }
@@ -183,10 +194,75 @@ public class ImpageActivity extends Activity {
 
         Mat ret = new Mat();
         ImageView retView = (ImageView) findViewById(R.id.imageResult);
-//        PerformanceAnalyzer.log();
         Features2d.drawMatches2(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, good, ret);
-//        PerformanceAnalyzer.count("drawMatches2 COSTs");
         showImg(ret, retView);
+
+
+    }
+
+    private void drawMatchResult3(List<MatOfDMatch> matchesList,
+                                  MatOfKeyPoint keyPointsTrain, MatOfKeyPoint keyPointsQuery) {
+
+        List<MatOfDMatch> good = new ArrayList<MatOfDMatch>();
+        for (MatOfDMatch match : matchesList) {
+            if (match.get(0, 0)[3] < 0.75*match.get(1, 0)[3]) { // distance
+                good.add(match);
+            }
+        }
+
+        int size = good.size();
+        Point[] srcPoints = new Point[size];
+        Point[] dstPoints = new Point[size];
+        if (size > 0) {
+            Point point = null;
+            double[] data = null;
+            for (int i = 0; i < size; i++) {
+                //MatOfDMatch
+                MatOfDMatch match = good.get(i);
+
+                // trainIdx : match.get(0, 0)[1]
+                // keypoint : keyPointsTrain.get(trainIdx, 0)
+                data = keyPointsTrain.get((int)match.get(0, 0)[1], 0);
+                srcPoints[i] = new Point(data[0], data[1]);
+
+                // queryIdx = match.get(0, 0)[0]
+                data = keyPointsQuery.get((int)match.get(0, 0)[0], 0);
+                dstPoints[i] = new Point(data[0], data[1]);
+            }
+        }
+
+        MatOfDMatch mask = new MatOfDMatch();
+        Mat matrix = Calib3d.findHomography(new MatOfPoint2f(srcPoints), new MatOfPoint2f(dstPoints), Calib3d.RANSAC, 5.0, mask);
+
+        int width = mQueryImg.rows();
+        int height = mQueryImg.cols();
+
+        Point[] array = {
+                new Point(0,0),
+                new Point(width,0),
+                new Point(width,height),
+                new Point(0,height),
+        };
+
+
+        MatOfPoint srcRect = new MatOfPoint(array);
+        Log.e(LogTAG, srcRect.dump());
+        srcRect.convertTo(srcRect, CvType.CV_32F);
+        MatOfPoint dstRect = new MatOfPoint();
+        dstRect.convertTo(dstRect, CvType.CV_32F);
+        Core.perspectiveTransform(srcRect, dstRect, matrix);
+
+        dstRect.convertTo(dstRect, CvType.CV_32S);
+        Log.e(LogTAG, dstRect.dump());
+        ArrayList<MatOfPoint> list = new ArrayList<MatOfPoint>();
+        list.add(dstRect);
+
+        Core.polylines(mTrainImg, list, true, new Scalar(200, 0, 200, 200), 3, Core.LINE_AA, 0);
+
+        Mat ret2 = new Mat();
+        ImageView retView2 = (ImageView) findViewById(R.id.imageResult2);
+        Features2d.drawMatches(mQueryImg, keyPointsQuery, mTrainImg, keyPointsTrain, mask, ret2);
+        showImg(ret2, retView2);
     }
 
     private void doMatch() {
@@ -235,7 +311,25 @@ public class ImpageActivity extends Activity {
         matcher.knnMatch(descriptorsQuery, descriptorsTrain, matchesList, 2); // FLANNBASED matcher
         PerformanceAnalyzer.count("knnMatch COSTs");
 
-        drawMatchResult2(matchesList, keyPointsTrain, keyPointsQuery);
+        drawMatchResult3(matchesList, keyPointsTrain, keyPointsQuery);
+    }
+
+    public void testDrawPolylines() {
+        Point[] array = {
+            new Point(100,100),
+            new Point(400,100),
+            new Point(400,400),
+            new Point(100,400),
+        };
+
+        MatOfPoint mop = new MatOfPoint(array);
+        ArrayList<MatOfPoint> list = new ArrayList<MatOfPoint>();
+        list.add(mop);
+
+        Mat ret = Mat.zeros(512, 512, CvType.CV_8UC1);
+        ImageView retView = (ImageView) findViewById(R.id.imageResult);
+        Core.polylines(ret, list, false, new Scalar(200, 0, 200, 200), 3, Core.LINE_AA, 0);
+        showImg(ret, retView);
     }
 
 }
