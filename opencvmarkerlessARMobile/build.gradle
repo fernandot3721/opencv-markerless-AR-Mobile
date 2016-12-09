@@ -1,9 +1,16 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'cvl'
+            keyPassword 'cvl777'
+            storeFile file('/home/tangjp/apk/cvl.jks')
+            storePassword 'cvl666'
+        }
+    }
     compileSdkVersion 17
     buildToolsVersion "25.0.0"
-
     defaultConfig {
         applicationId "meiroo.cvgl"
         minSdkVersion 8
@@ -14,14 +21,16 @@ android {
             abiFilters "armeabi-v7a"
         }
     }
-
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            signingConfig signingConfigs.config
+        }
+        debug {
+            jniDebuggable true
         }
     }
-
     sourceSets {
         release {
             jniLibs.srcDirs = ['jnilibs/release']
@@ -30,7 +39,6 @@ android {
             jniLibs.srcDirs = ['jnilibs/debug']
         }
     }
-
     externalNativeBuild {
         ndkBuild {
             path '../jni/Android.mk'
