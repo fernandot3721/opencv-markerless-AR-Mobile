@@ -162,9 +162,11 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
 			if (SystemClock.uptimeMillis() - time >= 1000) {
 				time = SystemClock.uptimeMillis();
+                PerformanceAnalyzer.log();
 				result = native_FindFeatures(mGray.getNativeObjAddr(), mRgba.getNativeObjAddr());
-				//Log.i("GLAndroid","recog result = " + result);
-			}
+//				Log.i("GLAndroid","recog result = " + result);
+                PerformanceAnalyzer.count("JAVA COST");
+            }
             
             break;
         }

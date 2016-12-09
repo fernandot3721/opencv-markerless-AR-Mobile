@@ -16,6 +16,7 @@
 #include "ObjRecog/commonCvFunctions.h"
 #include "ObjRecog/controlOR.h"
 #include "ObjRecog/imageDB.h"
+#include "Utils/performanceAnalyzer.h"
 
 using namespace std;
 using namespace cv;
@@ -24,6 +25,7 @@ using namespace cv;
 
 #define LOG_TAG "GLAndroid"
 #define LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
+#define LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,"TJPDEBUG",__VA_ARGS__)
 
 GLuint Name;
 GLubyte* ImagePtr;
@@ -202,7 +204,11 @@ int native_FindFeatures(JNIEnv *env,jclass clazz,jlong addrGray, jlong addrRgba)
 	
 	//LOGI("native_FindFeatures  gray:%ld rgba:%ld",addrGray,addrRgba);
 
+    double dt1, dt2, dt3;
+
+    PerformanceAnalyzer perfomance; // first time capture
 	Mat& frame  = *(Mat*)addrGray;
+    perfomance.reset();
 
 	if(!init){
 		Size frame_size = Size(frame.cols, frame.rows);
@@ -210,6 +216,11 @@ int native_FindFeatures(JNIEnv *env,jclass clazz,jlong addrGray, jlong addrRgba)
 		FileStorage cvfs;
 		cvfs.open("/sdcard/CVGL/config.xml", CV_STORAGE_READ);
 
+        if (cvfs.isOpened()) {
+            LOGE("open");
+        } else {
+            LOGE("close");
+        }
 
 		FileNode fn;
 		fn = cvfs["VisualWord"];
@@ -226,12 +237,15 @@ int native_FindFeatures(JNIEnv *env,jclass clazz,jlong addrGray, jlong addrRgba)
 			ctrlOR.loadVisualWordsBinary(vwfile, idxfile);
 		}
 
+		string name;
+		cvfs["ObjectDB"] >> name;
+        LOGE("ObjectDB: %s", name.c_str());
 		ctrlOR.loadObjectDB(cvfs["ObjectDB"]);
 
 		int max_query_size = 320;
 		cvfs["max_query_size"] >> max_query_size;
 
-		// クエリー用画像サイズを適切な大きさへ縮小して領域確保
+		// 面积固定通过降低图像大小为查询到适当的大小
 		int frame_max_size;
 		if(frame_size.width > frame_size.height){
 			frame_max_size = frame_size.width;
@@ -254,13 +268,21 @@ int native_FindFeatures(JNIEnv *env,jclass clazz,jlong addrGray, jlong addrRgba)
 		LOGI("query_scale = %d",query_scale);                //4
 
 	}
+    dt1 = perfomance.elapsed(); // init cost
+    perfomance.reset();
 
-	
+    cv::resize(frame, query_image, query_image.size());
+    dt2 = perfomance.elapsed(); // resize cost
+    perfomance.reset();
 
-	cv::resize(frame, query_image, query_image.size());
+    vector<cvar::resultInfo> recog_result = ctrlOR.queryImage(query_image);
+    dt3 = perfomance.elapsed(); // query cost
+    perfomance.reset();
 
-	vector<cvar::resultInfo> recog_result = ctrlOR.queryImage(query_image);
-	if(!recog_result.empty()){
+    LOGE("dt [init cost] %.1f, [resize cost] %.1f, [query cost] %.1f",
+         dt1, dt2, dt3);
+
+    if(!recog_result.empty()){
 		LOGI("Recognized id=%d,probility=%f,matchnum=%d, size=%d",
 			recog_result[0].img_id,
 			recog_result[0].probability,
