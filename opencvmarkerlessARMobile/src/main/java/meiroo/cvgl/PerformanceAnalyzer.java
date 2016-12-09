@@ -5,7 +5,7 @@ import android.util.Log;
 
 
 public class PerformanceAnalyzer {
-    private static String LogTAG = "PerformanceAnalyzer TJPDEBUG";
+    private static String LogTAG = "PerformanceAnalyzerJ";
     private static long sBegin;
 
     public static void log() {

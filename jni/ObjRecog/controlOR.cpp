@@ -33,6 +33,7 @@
 #include "controlOR.h"
 #include <opencv2/nonfree/nonfree.hpp>
 #include <sstream>
+#include <Utils/performanceAnalyzer.h>
 
 using namespace std;
 using namespace cv;
@@ -129,7 +130,6 @@ vector<resultInfo> controlOR::queryImage(const Mat &src_img, int result_num) {
 
     try {
         extractFeatures(src_img, kp_vec, desc_vec);
-
         vector<int> id_list;
         int ret = getFeatureIdVec(desc_vec, id_list);
         if (ret < 0)
@@ -330,10 +330,16 @@ int controlOR::extractFeatures(const cv::Mat &src_img, cv::vector<cv::KeyPoint> 
                                cv::Mat &descriptor) const {
     // extract freak
     try {
+        PerformanceAnalyzer* perfomance = new PerformanceAnalyzer("TJPDEBUG controlOR performance");
+        perfomance->log();
         // keypoints detection from a query image
         feature_detector->detect(src_img, kpt);
+        perfomance->count("feature_detector");
+
+        perfomance->log();
         // descriptor extraction
         descriptor_extractor->compute(src_img, kpt, descriptor);
+        perfomance->count("descriptor_extractor");
 
 //		(*(SURF*)featureDetector)(src_img, Mat(), kpt, descriptor);
         //	cout << ",kpt:" << kpt.size() << ",";

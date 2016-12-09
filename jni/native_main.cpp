@@ -196,9 +196,9 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
     double dt1, dt2, dt3;
 
-    PerformanceAnalyzer perfomance; // first time capture
+    PerformanceAnalyzer* perfomance = new PerformanceAnalyzer("native_main performance"); // first time capture
     Mat &frame = *(Mat *) addrGray;
-    perfomance.reset();
+    perfomance->reset();
 
     if (!init) {
         Size frame_size = Size(frame.cols, frame.rows);
@@ -259,19 +259,18 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
         LOGI("query_scale = %d", query_scale);                //4
 
     }
-    dt1 = perfomance.elapsed(); // init cost
-    perfomance.reset();
+    dt1 = perfomance->elapsed(); // init cost
+    perfomance->reset();
 
     cv::resize(frame, query_image, query_image.size());
-    dt2 = perfomance.elapsed(); // resize cost
-    perfomance.reset();
+    dt2 = perfomance->elapsed(); // resize cost
+    perfomance->reset();
 
     vector<cvar::resultInfo> recog_result = ctrlOR.queryImage(query_image);
-    dt3 = perfomance.elapsed(); // query cost
-    perfomance.reset();
+    dt3 = perfomance->elapsed(); // query cost
+    perfomance->reset();
 
-    LOGE("dt [init cost] %.1f, [resize cost] %.1f, [query cost] %.1f",
-         dt1, dt2, dt3);
+    LOGE("dt [init cost] %.1f, [resize cost] %.1f, [query cost] %.1f", dt1, dt2, dt3);
 
     if (!recog_result.empty()) {
         LOGI("Recognized id=%d,probility=%f,matchnum=%d, size=%d",
