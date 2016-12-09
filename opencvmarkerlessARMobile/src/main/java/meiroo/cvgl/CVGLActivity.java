@@ -1,5 +1,4 @@
 package meiroo.cvgl;
-
 import javax.microedition.khronos.opengles.GL10;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -11,14 +10,12 @@ import org.opencv.core.Mat;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
-import meiroo.cvgl.R;
 
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.PixelFormat;
-import android.opengl.EGLConfig;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -28,6 +25,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.opengl.GLSurfaceView;
+
 
 public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     private static final String    TAG = "OCVSample::Activity";
@@ -41,6 +39,8 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     private Mat                    mRgba;
     private Mat                    mIntermediateMat;
     private Mat                    mGray;
+    private Mat                    mRgba2;
+    private Mat                    mGray2;
 
     private MenuItem               mItemPreviewRGBA;
     private MenuItem               mItemPreviewGray;
@@ -48,7 +48,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     private MenuItem               mItemPreviewFeatures;
 
     private CameraBridgeViewBase   mOpenCvCameraView;
-    
+
     public long time = 0;
     public static int result = 0;
 
@@ -89,7 +89,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.tutorial2_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
-        
+
         //Utils.CopyAssets(getResources().getAssets(), Environment.getExternalStorageDirectory().getPath(), "CVGL");
     }
 
@@ -126,13 +126,17 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
+        mRgba2 = new Mat(height, width, CvType.CV_8UC4);
         mIntermediateMat = new Mat(height, width, CvType.CV_8UC4);
         mGray = new Mat(height, width, CvType.CV_8UC1);
+        mGray2 = new Mat(height, width, CvType.CV_8UC1);
     }
 
     public void onCameraViewStopped() {
         mRgba.release();
+        mRgba2.release();
         mGray.release();
+        mGray2.release();
         mIntermediateMat.release();
     }
 
@@ -157,21 +161,35 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
             // input frame has RGBA format
             mRgba = inputFrame.rgba();
             mGray = inputFrame.gray();
-            
-            
 
 			if (SystemClock.uptimeMillis() - time >= 1000) {
 				time = SystemClock.uptimeMillis();
-                PerformanceAnalyzer.log();
-				result = native_FindFeatures(mGray.getNativeObjAddr(), mRgba.getNativeObjAddr());
-//				Log.i("GLAndroid","recog result = " + result);
-                PerformanceAnalyzer.count("JAVA COST");
+                mGray2 = mGray.clone();
+                mRgba2 = mRgba.clone();
+                new DetectTask().execute(mGray2, mRgba2) ;
+//                detectObject(mGray, mRgba);
             }
-            
+
             break;
         }
 
         return mRgba;
+    }
+
+    private class DetectTask extends AsyncTask<Mat, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Mat... params) {
+            detectObject(params[0], params[1]);
+            return null;
+        }
+    }
+
+    synchronized private void detectObject(Mat gray, Mat rgb) {
+        PerformanceAnalyzer.log();
+        result = native_FindFeatures(gray.getNativeObjAddr(), rgb.getNativeObjAddr());
+//        Log.i("GLAndroid","recog result = " + result);
+        PerformanceAnalyzer.count("JAVA COST");
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -211,8 +229,8 @@ class GlBufferView extends GLSurfaceView {
          * custom config chooser. See ConfigChooser class definition
          * below.
          */
-        
-		
+
+
 		//setZOrderOnTop(true);
 		setRenderer(new MyRenderer());
 		/*
@@ -228,13 +246,13 @@ class GlBufferView extends GLSurfaceView {
 				CVGLActivity.native_touch_event(event.getX(), event.getY(), event.getAction());
 			}
 		});
-		
+
 		return true;
 	}
-	
+
 	@Override
 	public boolean onKeyDown(final int keyCode, final KeyEvent event)
-	{		
+	{
 		queueEvent(new Runnable() {
 			public void run() {
 				CVGLActivity.native_key_event(keyCode, event.getAction());
@@ -242,7 +260,7 @@ class GlBufferView extends GLSurfaceView {
 		});
 		return false;
 	}
-	
+
 	@Override
 	public boolean onKeyUp(final int keyCode, final KeyEvent event)
 	{
@@ -251,19 +269,19 @@ class GlBufferView extends GLSurfaceView {
 				CVGLActivity.native_key_event(keyCode, event.getAction());
 			}
 		});
-		
+
 		return false;
 	}
 
 	class MyRenderer implements GLSurfaceView.Renderer {
-		
+
 		@Override
-		public void onSurfaceCreated(GL10 gl, javax.microedition.khronos.egl.EGLConfig arg1) { 
-			/* do nothing */ 
+		public void onSurfaceCreated(GL10 gl, javax.microedition.khronos.egl.EGLConfig arg1) {
+			/* do nothing */
 			CVGLActivity.native_start();
 		}
-		
-		
+
+
 		public void onSurfaceChanged(GL10 gl, int w, int h) {
 			CVGLActivity.native_gl_resize(w, h);
 		}
@@ -280,11 +298,11 @@ class GlBufferView extends GLSurfaceView {
 			if (time >= (fpsTime + 3000.0f)) {
 				fpsTime = time;
 				avgFPS /= 3.0f;
-				//Log.d("GLAndroid", "FPS: " + Float.toString(avgFPS));
+				Log.d("GLAndroid", "FPS: " + Float.toString(avgFPS));
 				avgFPS = 0;
 			}
 			framerate++;
-			
+
 			if(CVGLActivity.result > 0){
 				CVGLActivity.native_gl_render();
 			}else{
