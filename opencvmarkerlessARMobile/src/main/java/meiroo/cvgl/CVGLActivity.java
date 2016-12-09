@@ -1,4 +1,5 @@
 package meiroo.cvgl;
+
 import javax.microedition.khronos.opengles.GL10;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -28,36 +29,35 @@ import android.opengl.GLSurfaceView;
 
 
 public class CVGLActivity extends Activity implements CvCameraViewListener2 {
-    private static final String    TAG = "OCVSample::Activity";
+    private static final String TAG = "OCVSample::Activity";
 
-    private static final int       VIEW_MODE_RGBA     = 0;
-    private static final int       VIEW_MODE_GRAY     = 1;
-    private static final int       VIEW_MODE_CANNY    = 2;
-    private static final int       VIEW_MODE_FEATURES = 5;
+    private static final int VIEW_MODE_RGBA = 0;
+    private static final int VIEW_MODE_GRAY = 1;
+    private static final int VIEW_MODE_CANNY = 2;
+    private static final int VIEW_MODE_FEATURES = 5;
 
-    private int                    mViewMode;
-    private Mat                    mRgba;
-    private Mat                    mIntermediateMat;
-    private Mat                    mGray;
-    private Mat                    mRgba2;
-    private Mat                    mGray2;
+    private int mViewMode;
+    private Mat mRgba;
+    private Mat mIntermediateMat;
+    private Mat mGray;
+    private Mat mRgba2;
+    private Mat mGray2;
 
-    private MenuItem               mItemPreviewRGBA;
-    private MenuItem               mItemPreviewGray;
-    private MenuItem               mItemPreviewCanny;
-    private MenuItem               mItemPreviewFeatures;
+    private MenuItem mItemPreviewRGBA;
+    private MenuItem mItemPreviewGray;
+    private MenuItem mItemPreviewCanny;
+    private MenuItem mItemPreviewFeatures;
 
-    private CameraBridgeViewBase   mOpenCvCameraView;
+    private CameraBridgeViewBase mOpenCvCameraView;
 
     public long time = 0;
     public static int result = 0;
 
-    private BaseLoaderCallback  mLoaderCallback = new BaseLoaderCallback(this) {
+    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
+                case LoaderCallbackInterface.SUCCESS: {
                     Log.i(TAG, "OpenCV loaded successfully");
 
                     // Load native library after(!) OpenCV initialization
@@ -65,11 +65,12 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
                     System.loadLibrary("cvgl");
 
                     mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
+                }
+                break;
+                default: {
                     super.onManagerConnected(status);
-                } break;
+                }
+                break;
             }
         }
     };
@@ -78,7 +79,9 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
-    /** Called when the activity is first created. */
+    /**
+     * Called when the activity is first created.
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
@@ -104,16 +107,14 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     }
 
     @Override
-    public void onPause()
-    {
+    public void onPause() {
         super.onPause();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
     }
 
     @Override
-    public void onResume()
-    {
+    public void onResume() {
         super.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_3, this, mLoaderCallback);
     }
@@ -143,34 +144,34 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         final int viewMode = mViewMode;
         switch (viewMode) {
-        case VIEW_MODE_GRAY:
-            // input frame has gray scale format
-            Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
-            break;
-        case VIEW_MODE_RGBA:
-            // input frame has RBGA format
-            mRgba = inputFrame.rgba();
-            break;
-        case VIEW_MODE_CANNY:
-            // input frame has gray scale format
-            mRgba = inputFrame.rgba();
-            Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
-            Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
-            break;
-        case VIEW_MODE_FEATURES:
-            // input frame has RGBA format
-            mRgba = inputFrame.rgba();
-            mGray = inputFrame.gray();
+            case VIEW_MODE_GRAY:
+                // input frame has gray scale format
+                Imgproc.cvtColor(inputFrame.gray(), mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+                break;
+            case VIEW_MODE_RGBA:
+                // input frame has RBGA format
+                mRgba = inputFrame.rgba();
+                break;
+            case VIEW_MODE_CANNY:
+                // input frame has gray scale format
+                mRgba = inputFrame.rgba();
+                Imgproc.Canny(inputFrame.gray(), mIntermediateMat, 80, 100);
+                Imgproc.cvtColor(mIntermediateMat, mRgba, Imgproc.COLOR_GRAY2RGBA, 4);
+                break;
+            case VIEW_MODE_FEATURES:
+                // input frame has RGBA format
+                mRgba = inputFrame.rgba();
+                mGray = inputFrame.gray();
 
-			if (SystemClock.uptimeMillis() - time >= 1000) {
-				time = SystemClock.uptimeMillis();
-                mGray2 = mGray.clone();
-                mRgba2 = mRgba.clone();
-                new DetectTask().execute(mGray2, mRgba2) ;
+                if (SystemClock.uptimeMillis() - time >= 1000) {
+                    time = SystemClock.uptimeMillis();
+                    mGray2 = mGray.clone();
+                    mRgba2 = mRgba.clone();
+                    new DetectTask().execute(mGray2, mRgba2);
 //                detectObject(mGray, mRgba);
-            }
+                }
 
-            break;
+                break;
         }
 
         return mRgba;
@@ -207,22 +208,28 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
         return true;
     }
+
     static native int native_FindFeatures(long matAddrGr, long matAddrRgba);
+
     static native void native_start();
-	static native void native_gl_resize(int w, int h);
-	static native void native_gl_render();
-	static native void native_key_event(int key, int status);
-	static native void native_touch_event(float x, float y, int status);
+
+    static native void native_gl_resize(int w, int h);
+
+    static native void native_gl_render();
+
+    static native void native_key_event(int key, int status);
+
+    static native void native_touch_event(float x, float y, int status);
 }
 
 
 class GlBufferView extends GLSurfaceView {
-	 private static String TAG = "GLAndroid";
+    private static String TAG = "GLAndroid";
 
-	public GlBufferView(Context context, AttributeSet attrs) {
-		super(context, attrs);
-		getHolder().setFormat(PixelFormat.TRANSLUCENT);
-		setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+    public GlBufferView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        setEGLConfigChooser(8, 8, 8, 8, 16, 0);
 
         /* We need to choose an EGLConfig that matches the format of
          * our surface exactly. This is going to be done in our
@@ -231,90 +238,89 @@ class GlBufferView extends GLSurfaceView {
          */
 
 
-		//setZOrderOnTop(true);
-		setRenderer(new MyRenderer());
-		/*
+        //setZOrderOnTop(true);
+        setRenderer(new MyRenderer());
+        /*
 		requestFocus();
 		setFocusableInTouchMode(true);
 		*/
-	}
-	@Override
-    public boolean onTouchEvent(final MotionEvent event)
-	{
-		queueEvent(new Runnable() {
-			public void run() {
-				CVGLActivity.native_touch_event(event.getX(), event.getY(), event.getAction());
-			}
-		});
+    }
 
-		return true;
-	}
+    @Override
+    public boolean onTouchEvent(final MotionEvent event) {
+        queueEvent(new Runnable() {
+            public void run() {
+                CVGLActivity.native_touch_event(event.getX(), event.getY(), event.getAction());
+            }
+        });
 
-	@Override
-	public boolean onKeyDown(final int keyCode, final KeyEvent event)
-	{
-		queueEvent(new Runnable() {
-			public void run() {
-				CVGLActivity.native_key_event(keyCode, event.getAction());
-			}
-		});
-		return false;
-	}
+        return true;
+    }
 
-	@Override
-	public boolean onKeyUp(final int keyCode, final KeyEvent event)
-	{
-		queueEvent(new Runnable() {
-			public void run() {
-				CVGLActivity.native_key_event(keyCode, event.getAction());
-			}
-		});
+    @Override
+    public boolean onKeyDown(final int keyCode, final KeyEvent event) {
+        queueEvent(new Runnable() {
+            public void run() {
+                CVGLActivity.native_key_event(keyCode, event.getAction());
+            }
+        });
+        return false;
+    }
 
-		return false;
-	}
+    @Override
+    public boolean onKeyUp(final int keyCode, final KeyEvent event) {
+        queueEvent(new Runnable() {
+            public void run() {
+                CVGLActivity.native_key_event(keyCode, event.getAction());
+            }
+        });
 
-	class MyRenderer implements GLSurfaceView.Renderer {
+        return false;
+    }
 
-		@Override
-		public void onSurfaceCreated(GL10 gl, javax.microedition.khronos.egl.EGLConfig arg1) {
+    class MyRenderer implements GLSurfaceView.Renderer {
+
+        @Override
+        public void onSurfaceCreated(GL10 gl, javax.microedition.khronos.egl.EGLConfig arg1) {
 			/* do nothing */
-			CVGLActivity.native_start();
-		}
+            CVGLActivity.native_start();
+        }
 
 
-		public void onSurfaceChanged(GL10 gl, int w, int h) {
-			CVGLActivity.native_gl_resize(w, h);
-		}
+        public void onSurfaceChanged(GL10 gl, int w, int h) {
+            CVGLActivity.native_gl_resize(w, h);
+        }
 
-		public void onDrawFrame(GL10 gl) {
-			time = SystemClock.uptimeMillis();
+        public void onDrawFrame(GL10 gl) {
+            time = SystemClock.uptimeMillis();
 
-			if (time >= (frameTime + 1000.0f)) {
-				frameTime = time;
-				avgFPS += framerate;
-				framerate = 0;
-			}
+            if (time >= (frameTime + 1000.0f)) {
+                frameTime = time;
+                avgFPS += framerate;
+                framerate = 0;
+            }
 
-			if (time >= (fpsTime + 3000.0f)) {
-				fpsTime = time;
-				avgFPS /= 3.0f;
-				Log.d("GLAndroid", "FPS: " + Float.toString(avgFPS));
-				avgFPS = 0;
-			}
-			framerate++;
+            if (time >= (fpsTime + 3000.0f)) {
+                fpsTime = time;
+                avgFPS /= 3.0f;
+                Log.d("GLAndroid", "FPS: " + Float.toString(avgFPS));
+                avgFPS = 0;
+            }
+            framerate++;
 
-			if(CVGLActivity.result > 0){
-				CVGLActivity.native_gl_render();
-			}else{
-				gl.glClearColor(0,0,0,0);
-				gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
-			}
-		}
-		public long time = 0;
-		public short framerate = 0;
-		public long fpsTime = 0;
-		public long frameTime = 0;
-		public float avgFPS = 0;
-	}
+            if (CVGLActivity.result > 0) {
+                CVGLActivity.native_gl_render();
+            } else {
+                gl.glClearColor(0, 0, 0, 0);
+                gl.glClear(GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
+            }
+        }
+
+        public long time = 0;
+        public short framerate = 0;
+        public long fpsTime = 0;
+        public long frameTime = 0;
+        public float avgFPS = 0;
+    }
 }
 
