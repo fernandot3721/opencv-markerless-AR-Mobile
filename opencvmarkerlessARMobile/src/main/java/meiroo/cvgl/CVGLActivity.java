@@ -1,31 +1,25 @@
 package meiroo.cvgl;
 
-import javax.microedition.khronos.opengles.GL10;
+import android.app.Activity;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.os.SystemClock;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.WindowManager;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.imgproc.Imgproc;
-
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.PixelFormat;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.SystemClock;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.WindowManager;
-import android.opengl.GLSurfaceView;
 
 
 public class CVGLActivity extends Activity implements CvCameraViewListener2 {
@@ -53,6 +47,8 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
     public long time = 0;
     public static int result = 0;
 
+    private WorkerThread mWorkerThread;
+
     private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -75,6 +71,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         }
     };
 
+
     public CVGLActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
@@ -93,6 +90,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.tutorial2_activity_surface_view);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
+        mWorkerThread = new WorkerThread();
         //Utils.CopyAssets(getResources().getAssets(), Environment.getExternalStorageDirectory().getPath(), "CVGL");
     }
 
@@ -123,6 +121,8 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         super.onDestroy();
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+        mWorkerThread.exit();
+        mWorkerThread = null;
     }
 
     public void onCameraViewStarted(int width, int height) {
@@ -169,8 +169,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
                     mGray2 = mGray.clone();
                     mRgba2 = mRgba.clone();
                     PerformanceAnalyzer.count("COPY Costs");
-                    new DetectTask().execute(mGray2, mRgba2);
-//                detectObject(mGray, mRgba);
+                    mWorkerThread.executeTask(mGray2, mRgba2);
                 }
 
                 break;
@@ -179,12 +178,40 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         return mRgba;
     }
 
-    private class DetectTask extends AsyncTask<Mat, Void, Void> {
+    private class WorkerThread extends Thread {
+        protected static final String TAG = "WorkerThread";
+        private Handler mHandler;
+        private Looper mLooper;
 
-        @Override
-        protected Void doInBackground(Mat... params) {
-            detectObject(params[0], params[1]);
-            return null;
+        public WorkerThread() {
+            start();
+        }
+
+        public void run() {
+            Looper.prepare();
+            mLooper = Looper.myLooper();
+            mHandler = new Handler(mLooper) {
+                @Override
+                public void handleMessage(Message msg) {
+                    Mat[] params = (Mat[]) msg.obj;
+                    detectObject(params[0], params[1]);
+                }
+            };
+            Looper.loop();
+        }
+
+        public void exit() {
+            if (mLooper != null) {
+                mLooper.quit();
+                mLooper = null;
+            }
+        }
+
+        public void executeTask(Mat... params) {
+            mHandler.removeCallbacksAndMessages(null);
+            Message msg = Message.obtain();
+            msg.obj = params;
+            mHandler.sendMessage(msg);
         }
     }
 
