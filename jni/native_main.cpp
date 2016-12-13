@@ -220,6 +220,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
         std::string idxfile;
         fn["index"] >> idxfile;
+        LOGI("idxfile = %s", idxfile.c_str());
         if (idxfile.empty()) {
             ctrlOR.loadVisualWords(vwfile);
         }
@@ -235,7 +236,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
         int max_query_size = 320;
         cvfs["max_query_size"] >> max_query_size;
 
-        // 面积固定通过降低图像大小为查询到适当的大小
+        // 通过固定size降低图像大小为适当的大小查询
         int frame_max_size;
         if (frame_size.width > frame_size.height) {
             frame_max_size = frame_size.width;

@@ -165,10 +165,10 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
                 if (SystemClock.uptimeMillis() - time >= 1000) {
                     time = SystemClock.uptimeMillis();
-                    PerformanceAnalyzer.log();
+//                    PerformanceAnalyzer.log();
                     mGray2 = mGray.clone();
                     mRgba2 = mRgba.clone();
-                    PerformanceAnalyzer.count("COPY Costs");
+//                    PerformanceAnalyzer.count("COPY Costs");
                     mWorkerThread.executeTask(mGray2, mRgba2);
                 }
 

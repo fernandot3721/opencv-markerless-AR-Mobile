@@ -140,20 +140,20 @@ namespace cvar {
         void releaseImgVoteMap();
 
     private:
-        std::multimap<int, featureInfo> feature_KPT_map;    // feature_idをキーにkeypoint_idとimg_idを検索
-        std::map<int, cv::KeyPoint> keypoint_map;    // keypoint_idをキーにKeyPointを検索
-        std::map<int, imageInfo> imgInfo_map;    // img_idをキーにfeature_numを検索
-        std::map<int, std::vector<featureVote> *> imgVote_map;    // img_idをキーにvoteTableを検索
+        std::multimap<int, featureInfo> feature_KPT_map;    // 搜索keypoint_id和img_id的feature_id mapping
+        std::map<int, cv::KeyPoint> keypoint_map;    // 搜索keypoint的keypoint_id mapping
+        std::map<int, imageInfo> imgInfo_map;    // 搜索feature_num的img_id mapping
+        std::map<int, std::vector<featureVote> *> imgVote_map;    // 搜索voteTable的img_id mapping
 
-//	int visual_word_num;	// visual wordの数
-        int imageNum;    // 登録画像枚数
-        int featureNum;    // 登録特徴点数
+//	int visual_word_num;	// visual word的数目
+        int imageNum;    // 图像数
+        int featureNum;    // 特征点点数
         int voteNum;
-        float threshold;    // 特徴点マッチのしきい値(0 - 1)
+        float threshold;    // 特征点的阈值匹配（0 - 1）
         float geo_threshold;
-        double dist_diff_threshold;    // 対応点の位置に関する許容誤差(画像サイズの比：0 - 1)
-//	double angle_diff_threshold;	// 対応点の角度に関する許容誤差 180度×(0 - 1)
-//	double scale_diff_threshold;	// 対応点のスケールに関する許容誤差 (サイズの比：> 1)
+        double dist_diff_threshold;    // 对应点的位置公差（图像尺寸比例：0 - 1）
+//	double angle_diff_threshold;	// 对应点的角度上的公差（图像大小的比例：0 - 1）
+//	double scale_diff_threshold;	// 对应点的规模上的公差 (大小的比率：> 1)
     };
 
 };

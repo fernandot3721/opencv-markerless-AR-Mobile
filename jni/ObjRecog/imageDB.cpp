@@ -97,7 +97,7 @@ int imageDB::registImageFeatures(int img_id, Size img_size, vector<KeyPoint> kp_
                                  vector<int> id_list) {
     featureInfo feat_info;
 
-    // ToDo: 例外処理 kp_vec.size()とid_list.size()の不一致
+    // ToDo: 异常处理kp_vec.size（）和id_list.size的不匹配（）
 
     imageInfo img_info;
     img_info.feature_num = kp_vec.size();
@@ -105,7 +105,7 @@ int imageDB::registImageFeatures(int img_id, Size img_size, vector<KeyPoint> kp_
     pair<map<int, imageInfo>::iterator, bool> ret_insert;
     ret_insert = imgInfo_map.insert(pair<int, imageInfo>(img_id, img_info));
 
-    // ToDo: 例外処理
+    // ToDo: 异常处理
     if (!(bool) (ret_insert.second)) {
         return -1;
     }
@@ -120,7 +120,7 @@ int imageDB::registImageFeatures(int img_id, Size img_size, vector<KeyPoint> kp_
     int size = kp_vec.size();
 
     // regist image features as img_id
-    // ToDo: 例外処理
+    // ToDo: 异常处理
     for (i = 0; i < size; i++) {
         if (id_list[i * voteNum] >= 0) {
             keypoint_id = getVacantKptId();
@@ -135,7 +135,7 @@ int imageDB::registImageFeatures(int img_id, Size img_size, vector<KeyPoint> kp_
 }
 
 
-// keypoint_idの割り当て
+// keypoint_id分配
 int imageDB::getVacantKptId() {
     int size = keypoint_map.size();
     if (featureNum == size) {
@@ -154,7 +154,7 @@ int imageDB::getVacantKptId() {
 }
 
 
-// img_idの情報をDBから削除
+// 从DB信息删除img_id
 int imageDB::removeImageId(int img_id) {
     /////// erase img_id from imginfo_map //////
     map<int, imageInfo>::iterator imginfo_itr;
