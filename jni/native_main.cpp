@@ -270,6 +270,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
     vector<cvar::resultInfo> recog_result = ctrlOR.queryImage(query_image);
     dt3 = perfomance->elapsed(); // query cost
     perfomance->reset();
+    delete perfomance;
 
     LOGE("dt [init cost] %.1f, [resize cost] %.1f, [query cost] %.1f", dt1, dt2, dt3);
 

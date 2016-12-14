@@ -340,6 +340,7 @@ int controlOR::extractFeatures(const cv::Mat &src_img, cv::vector<cv::KeyPoint> 
         // descriptor extraction
         descriptor_extractor->compute(src_img, kpt, descriptor);
         perfomance->count("descriptor_extractor");
+        delete perfomance;
 
 //		(*(SURF*)featureDetector)(src_img, Mat(), kpt, descriptor);
         //	cout << ",kpt:" << kpt.size() << ",";
