@@ -16,7 +16,7 @@
 #include "ObjRecog/commonCvFunctions.h"
 #include "ObjRecog/controlOR.h"
 #include "ObjRecog/imageDB.h"
-#include "Utils/performanceAnalyzer.h"
+#include "performanceAnalyzer.h"
 
 using namespace std;
 using namespace cv;
@@ -190,27 +190,22 @@ cvar::controlOR ctrlOR;
 bool init = false;
 Mat query_image;
 
-int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba) {
+int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba, jlong id) {
 
     //LOGI("native_FindFeatures  gray:%ld rgba:%ld",addrGray,addrRgba);
 
-    double dt1, dt2, dt3;
-
-    PerformanceAnalyzer* perfomance = new PerformanceAnalyzer("native_main performance"); // first time capture
     Mat &frame = *(Mat *) addrGray;
-    perfomance->reset();
+    std::ostringstream tmpstream;
+    tmpstream << "Image: " << id;
+    PerformanceAnalyzer* performanceAnalyzer = PerformanceAnalyzer::getInstance();
+    performanceAnalyzer->tag(tmpstream.str());
+    performanceAnalyzer->log();
 
     if (!init) {
         Size frame_size = Size(frame.cols, frame.rows);
 
         FileStorage cvfs;
         cvfs.open("/sdcard/CVGL/config.xml", CV_STORAGE_READ);
-
-        if (cvfs.isOpened()) {
-            LOGE("open");
-        } else {
-            LOGE("close");
-        }
 
         FileNode fn;
         fn = cvfs["VisualWord"];
@@ -230,7 +225,6 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
         string name;
         cvfs["ObjectDB"] >> name;
-        LOGE("ObjectDB: %s", name.c_str());
         ctrlOR.loadObjectDB(cvfs["ObjectDB"]);
 
         int max_query_size = 320;
@@ -260,19 +254,15 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
         LOGI("query_scale = %d", query_scale);                //4
 
     }
-    dt1 = perfomance->elapsed(); // init cost
-    perfomance->reset();
+    performanceAnalyzer->count("init");
 
     cv::resize(frame, query_image, query_image.size());
-    dt2 = perfomance->elapsed(); // resize cost
-    perfomance->reset();
 
+    performanceAnalyzer->log();
     vector<cvar::resultInfo> recog_result = ctrlOR.queryImage(query_image);
-    dt3 = perfomance->elapsed(); // query cost
-    perfomance->reset();
-    delete perfomance;
+    performanceAnalyzer->count("query");
+    performanceAnalyzer->commit();
 
-    LOGE("dt [init cost] %.1f, [resize cost] %.1f, [query cost] %.1f", dt1, dt2, dt3);
 
     if (!recog_result.empty()) {
         LOGI("Recognized id=%d,probility=%f,matchnum=%d, size=%d",

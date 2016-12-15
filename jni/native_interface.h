@@ -15,6 +15,6 @@ void native_key_event(JNIEnv *env, jclass clazz, jint key, jint status);
 
 void native_touch_event(JNIEnv *env, jclass clazz, jfloat x, jfloat y, jint status);
 
-int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba);
+int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba, jlong id);
 
 #endif

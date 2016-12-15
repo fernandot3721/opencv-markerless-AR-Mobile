@@ -39,6 +39,7 @@
 #define _USE_MATH_DEFINES
 
 #include <math.h>
+#include <performanceAnalyzer.h>
 
 using namespace std;
 using namespace cv;
@@ -244,7 +245,7 @@ vector<resultInfo> imageDB::retrieveImageId(const vector<KeyPoint> &kp_vec,
             msg = msg + "visual word must be more than 1";
         }
         e.setMessage(msg);
-
+        PerformanceAnalyzer::getInstance()->save("ERROR: " + msg);
         throw e;
     }
 
@@ -354,6 +355,10 @@ vector<resultInfo> imageDB::calcMatchCountResult(const vector<KeyPoint> &kp_vec,
                 if (Pp > 1) Pp = 1;
                 prob = calcIntegBinDistribution(in_feats_num, match_num, Pp);
 
+                std::ostringstream tmpstream;
+                tmpstream << "match_num is: " << match_num << "and prob is: " << prob;
+                PerformanceAnalyzer::getInstance()->save(tmpstream.str());
+
                 if (prob >= threshold) {
                     result_info.img_id = img_id;
                     result_info.matched_num = match_num;
@@ -361,6 +366,8 @@ vector<resultInfo> imageDB::calcMatchCountResult(const vector<KeyPoint> &kp_vec,
                     result_info.probability = prob;
                     result_vec.push_back(result_info);
                 }
+            } else {
+                PerformanceAnalyzer::getInstance()->save("ERROR: match_num less than 5");
             }
 
             vote_itr++;
@@ -389,6 +396,10 @@ vector<resultInfo> imageDB::calcGeometryConsistentResult(const vector<KeyPoint> 
     vector<resultInfo> result_vec;
 
     int s = tmp_result_vec.size();
+    std::ostringstream tmpstream;
+    tmpstream << "result count: " << s;
+    PerformanceAnalyzer* performanceAnalyzer = PerformanceAnalyzer::getInstance();
+    performanceAnalyzer->save(tmpstream.str());
     if (!s)
         return result_vec;
 
@@ -442,6 +453,9 @@ vector<resultInfo> imageDB::calcGeometryConsistentResult(const vector<KeyPoint> 
                 result_info.object_position = pos_points;
                 result_vec.push_back(result_info);
                 count++;
+                performanceAnalyzer->save("shape_valid SUCESS");
+            } else {
+                performanceAnalyzer->save("shape_valid FAILED");
             }
         }
         return result_vec;

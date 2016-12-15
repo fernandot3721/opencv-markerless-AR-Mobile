@@ -32,8 +32,7 @@
 //M*/
 #include "controlOR.h"
 #include <opencv2/nonfree/nonfree.hpp>
-#include <sstream>
-#include <Utils/performanceAnalyzer.h>
+#include <performanceAnalyzer.h>
 
 using namespace std;
 using namespace cv;
@@ -192,6 +191,7 @@ bool controlOR::setDescriptorType(const std::string &descriptor_type) {
 //int controlOR::getFeatureIdVec(const vector<float>& desc_vec, vector<int>& id_list)
 int controlOR::getFeatureIdVec(const cv::Mat &desc_vec, vector<int> &id_list) {
     if (desc_vec.empty()) {
+        PerformanceAnalyzer::getInstance()->save("ERROR: desc_vec empty!");
         return -1;
     }
 //	vector<float> desc_point(feature_dimention);
@@ -330,17 +330,11 @@ int controlOR::extractFeatures(const cv::Mat &src_img, cv::vector<cv::KeyPoint> 
                                cv::Mat &descriptor) const {
     // extract freak
     try {
-        PerformanceAnalyzer* perfomance = new PerformanceAnalyzer("TJPDEBUG controlOR performance");
-        perfomance->log();
         // keypoints detection from a query image
         feature_detector->detect(src_img, kpt);
-        perfomance->count("feature_detector");
 
-        perfomance->log();
         // descriptor extraction
         descriptor_extractor->compute(src_img, kpt, descriptor);
-        perfomance->count("descriptor_extractor");
-        delete perfomance;
 
 //		(*(SURF*)featureDetector)(src_img, Mat(), kpt, descriptor);
         //	cout << ",kpt:" << kpt.size() << ",";

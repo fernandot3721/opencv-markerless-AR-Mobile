@@ -16,7 +16,7 @@ static JNINativeMethod s_methods[] = {
         {"native_gl_render",    "()V",    (void *) native_gl_render},
         {"native_key_event",    "(II)V",  (void *) native_key_event},
         {"native_touch_event",  "(FFI)V", (void *) native_touch_event},
-        {"native_FindFeatures", "(JJ)I",  (void *) native_FindFeatures},
+        {"native_FindFeatures", "(JJJ)I",  (void *) native_FindFeatures},
 };
 
 static int register_native_methods(JNIEnv *env,

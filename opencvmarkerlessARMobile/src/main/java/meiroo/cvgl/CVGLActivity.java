@@ -19,6 +19,7 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
 
@@ -163,7 +164,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
                 mRgba = inputFrame.rgba();
                 mGray = inputFrame.gray();
 
-                if (SystemClock.uptimeMillis() - time >= 1000) {
+                if (SystemClock.uptimeMillis() - time >= 5000) {
                     time = SystemClock.uptimeMillis();
 //                    PerformanceAnalyzer.log();
                     mGray2 = mGray.clone();
@@ -217,9 +218,12 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
 
     synchronized private void detectObject(Mat gray, Mat rgb) {
         PerformanceAnalyzer.log();
-        result = native_FindFeatures(gray.getNativeObjAddr(), rgb.getNativeObjAddr());
+        result = native_FindFeatures(gray.getNativeObjAddr(), rgb.getNativeObjAddr(), time);
 //        Log.i("GLAndroid","recog result = " + result);
-        PerformanceAnalyzer.count("detectObject COST");
+        PerformanceAnalyzer.logAndCount("detectObject COST");
+        Highgui.imwrite("/sdcard/test/" + time + ".jpg", gray);
+        PerformanceAnalyzer.count("imwrite COST");
+
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -238,7 +242,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         return true;
     }
 
-    static native int native_FindFeatures(long matAddrGr, long matAddrRgba);
+    static native int native_FindFeatures(long matAddrGr, long matAddrRgba, long id);
 
     static native void native_start();
 
