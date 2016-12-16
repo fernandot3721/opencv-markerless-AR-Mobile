@@ -196,6 +196,19 @@ int controlOR::getFeatureIdVec(const cv::Mat &desc_vec, vector<int> &id_list) {
     }
 //	vector<float> desc_point(feature_dimention);
 
+    std::ostringstream tmpstream;
+    tmpstream << "query size: " << desc_vec.size().height
+    << " and train size: " << image_db.getFeatureNum()
+    << " [Arate: " << (float)desc_vec.size().height/image_db.getFeatureNum() << "]";
+    PerformanceAnalyzer::getInstance()->save(tmpstream.str());
+
+    // Too little descriptor may lead to miss match, experience threshold is 65%
+    float queryRate = (float)desc_vec.size().height/image_db.getFeatureNum();
+    if (queryRate < 0.65) {
+        PerformanceAnalyzer::getInstance()->save("queryRate FAILED !!!");
+        return -1;
+    }
+
     try {
         // convert feature vector to Mat
 //		Mat desc_points = visual_words.convertFeatureMat(desc_vec);

@@ -96,6 +96,9 @@ namespace cvar {
 
         int write(cv::FileStorage &cvfs, const std::string &name) const;
 
+        int getFeatureNum();
+
+
     private:
         int readFeatureKptMap(const cv::FileStorage &cvfs, const cv::FileNode &node);
 

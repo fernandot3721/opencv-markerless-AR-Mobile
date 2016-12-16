@@ -154,6 +154,9 @@ int imageDB::getVacantKptId() {
     throw orException("Keypoint_map collapse!!!");
 }
 
+int imageDB::getFeatureNum() {
+    return featureNum;
+}
 
 // 从DB信息删除img_id
 int imageDB::removeImageId(int img_id) {
@@ -348,6 +351,20 @@ vector<resultInfo> imageDB::calcMatchCountResult(const vector<KeyPoint> &kp_vec,
         while (vote_itr != imgVote_map.end()) {
             vote_table = vote_itr->second;
             match_num = vote_table->size();
+
+            std::ostringstream tmpstream;
+            tmpstream << "match size is: " << match_num
+            << " and query size is: " << kp_vec.size()
+            << " [Brate: " << (float)match_num/kp_vec.size() << "]";
+            PerformanceAnalyzer::getInstance()->save(tmpstream.str());
+
+            float matchRate = (float)match_num/kp_vec.size();
+            // Too little match points may lead to miss match, experience threshold is 8%
+            if (matchRate < 0.08) {
+                PerformanceAnalyzer::getInstance()->save("matchRate FAILED !!!");
+                break;
+            }
+
             if (match_num >= 5) {
                 img_id = vote_itr->first;
                 reg_feats_num = (imgInfo_map[img_id]).feature_num;
@@ -355,17 +372,13 @@ vector<resultInfo> imageDB::calcMatchCountResult(const vector<KeyPoint> &kp_vec,
                 if (Pp > 1) Pp = 1;
                 prob = calcIntegBinDistribution(in_feats_num, match_num, Pp);
 
-                std::ostringstream tmpstream;
-                tmpstream << "match_num is: " << match_num << "and prob is: " << prob;
-                PerformanceAnalyzer::getInstance()->save(tmpstream.str());
-
-                if (prob >= threshold) {
+//                if (prob >= threshold) {
                     result_info.img_id = img_id;
                     result_info.matched_num = match_num;
                     result_info.img_size = imgInfo_map[img_id].img_size;
                     result_info.probability = prob;
                     result_vec.push_back(result_info);
-                }
+//                }
             } else {
                 PerformanceAnalyzer::getInstance()->save("ERROR: match_num less than 5");
             }

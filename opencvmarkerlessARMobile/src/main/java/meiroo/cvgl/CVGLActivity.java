@@ -164,7 +164,7 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
                 mRgba = inputFrame.rgba();
                 mGray = inputFrame.gray();
 
-                if (SystemClock.uptimeMillis() - time >= 5000) {
+                if (SystemClock.uptimeMillis() - time >= 1500) {
                     time = SystemClock.uptimeMillis();
 //                    PerformanceAnalyzer.log();
                     mGray2 = mGray.clone();
@@ -220,9 +220,13 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
         PerformanceAnalyzer.log();
         result = native_FindFeatures(gray.getNativeObjAddr(), rgb.getNativeObjAddr(), time);
 //        Log.i("GLAndroid","recog result = " + result);
-        PerformanceAnalyzer.logAndCount("detectObject COST");
-        Highgui.imwrite("/sdcard/test/" + time + ".jpg", gray);
-        PerformanceAnalyzer.count("imwrite COST");
+        if (result > 0) {
+            PerformanceAnalyzer.logAndCount("SUCESS JCOST");
+        } else {
+            PerformanceAnalyzer.logAndCount("FAILED JCOST");
+        }
+//        Highgui.imwrite("/sdcard/test/" + time + ".jpg", gray);
+//        PerformanceAnalyzer.count("imwrite COST");
 
     }
 

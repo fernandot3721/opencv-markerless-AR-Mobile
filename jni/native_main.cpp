@@ -196,10 +196,10 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
     Mat &frame = *(Mat *) addrGray;
     std::ostringstream tmpstream;
-    tmpstream << "Image: " << id;
+    tmpstream << "ImageName: " << id;
     PerformanceAnalyzer* performanceAnalyzer = PerformanceAnalyzer::getInstance();
     performanceAnalyzer->tag(tmpstream.str());
-    performanceAnalyzer->log();
+//    performanceAnalyzer->log();
 
     if (!init) {
         Size frame_size = Size(frame.cols, frame.rows);
@@ -229,6 +229,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
         int max_query_size = 320;
         cvfs["max_query_size"] >> max_query_size;
+        max_query_size = 350;
 
         // 通过固定size降低图像大小为适当的大小查询
         int frame_max_size;
@@ -254,7 +255,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
         LOGI("query_scale = %d", query_scale);                //4
 
     }
-    performanceAnalyzer->count("init");
+//    performanceAnalyzer->count("init");
 
     cv::resize(frame, query_image, query_image.size());
 
