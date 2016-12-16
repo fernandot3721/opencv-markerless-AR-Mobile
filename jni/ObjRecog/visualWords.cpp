@@ -46,7 +46,7 @@ visualWords::visualWords(void) {
     this->matcherType = "FlannBased";
     this->descriptor_matcher = DescriptorMatcher::create(matcherType);
     voteNum = 1;
-    radius = 0.2;
+    radius = 0.25;
 }
 
 visualWords::~visualWords(void) {
@@ -428,7 +428,6 @@ Mat visualWords::querySearchDB(const Mat &features) {
         // search nearest descriptor in database
         vector<vector<DMatch> > match_idx;
         descriptor_matcher->knnMatch(features, match_idx, knn_size);
-        radius = 0.25;
 
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < voteNum; x++) {

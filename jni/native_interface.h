@@ -17,4 +17,6 @@ void native_touch_event(JNIEnv *env, jclass clazz, jfloat x, jfloat y, jint stat
 
 int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba, jlong id);
 
+void native_makeTrain();
+
 #endif

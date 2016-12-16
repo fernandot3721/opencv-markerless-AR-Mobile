@@ -239,12 +239,19 @@ public class CVGLActivity extends Activity implements CvCameraViewListener2 {
             mViewMode = VIEW_MODE_GRAY;
         } else if (item == mItemPreviewCanny) {
             mViewMode = VIEW_MODE_CANNY;
+            domakeTrain();
         } else if (item == mItemPreviewFeatures) {
             mViewMode = VIEW_MODE_FEATURES;
         }
 
         return true;
     }
+
+    private void domakeTrain() {
+        native_makeTrain();
+    }
+
+    static native void native_makeTrain();
 
     static native int native_FindFeatures(long matAddrGr, long matAddrRgba, long id);
 

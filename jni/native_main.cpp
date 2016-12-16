@@ -190,6 +190,47 @@ cvar::controlOR ctrlOR;
 bool init = false;
 Mat query_image;
 
+void create_vw(string file) {
+    int cls_num = 0;
+    LOGE("parsing file: %s", file.c_str());
+    Mat studyimg = imread(file, 0);
+    ctrlOR.addFeaturesForVW(studyimg);
+    ctrlOR.createVisualWords(cls_num);
+}
+
+void save_vw(string filename) {
+    LOGE("feature dictionary file: %s", filename.c_str());
+    ctrlOR.saveVisualWords(filename);
+}
+
+void registf(string file) {
+    LOGE("regist file: %s", file.c_str());
+    Mat studyimg = imread(file, 0);
+    int id = 1;
+    ctrlOR.registImage(studyimg, id);
+    LOGE("id: %d, file: %s ...", id, file.c_str());
+}
+
+void save_objectDB(string filename) {
+    LOGE("save file name: %s", filename.c_str());
+    ctrlOR.saveObjectDB(filename);
+}
+
+void native_makeTrain() {
+    string listFile = "/sdcard/CVGL/c.jpg";
+    string xmlFile = "/sdcard/CVGL/yct.xml";
+    string dbFile = "/sdcard/CVGL/yct.db";
+    string configFile = "/sdcard/CVGL/config.xml";
+    string binFile = "/sdcard/CVGL/yct.bin";
+    LOGE("HELLO TRAIN");
+
+    // craete_vw
+    create_vw(listFile);
+    save_vw(xmlFile);
+    registf(listFile);
+    save_objectDB(dbFile);
+}
+
 int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgba, jlong id) {
 
     //LOGI("native_FindFeatures  gray:%ld rgba:%ld",addrGray,addrRgba);
@@ -197,7 +238,7 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
     Mat &frame = *(Mat *) addrGray;
     std::ostringstream tmpstream;
     tmpstream << "ImageName: " << id;
-    PerformanceAnalyzer* performanceAnalyzer = PerformanceAnalyzer::getInstance();
+    PerformanceAnalyzer *performanceAnalyzer = PerformanceAnalyzer::getInstance();
     performanceAnalyzer->tag(tmpstream.str());
 //    performanceAnalyzer->log();
 
@@ -229,7 +270,6 @@ int native_FindFeatures(JNIEnv *env, jclass clazz, jlong addrGray, jlong addrRgb
 
         int max_query_size = 320;
         cvfs["max_query_size"] >> max_query_size;
-        max_query_size = 350;
 
         // 通过固定size降低图像大小为适当的大小查询
         int frame_max_size;
